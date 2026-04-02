@@ -1,35 +1,36 @@
 use tracing::{info, error};
 
-use crate::{Context, Data, Error, discord_event};
-use crate::fab_event::{City, format_fab_events, get_fab_events};
+use crate::command_options::{City, Country};
+use crate::{Context, Error, discord_event};
+use crate::fab_event::{ApiResponse, FabEvent};
 
-/// import (schedule) events from event locator.
+/// import / schedule events from fabtcg event locator at the choosen city.
 #[poise::command(slash_command, prefix_command, required_permissions = "CREATE_EVENTS", on_error = "error_hander")]
 pub async fn post(ctx: Context<'_>, #[description = "city:"] city: City) -> Result<(), Error> {
 
-    let fab_events = get_fab_events(&city).await?.results;
+    let fab_events: Vec<FabEvent> = ApiResponse::get_fab_events(&city).await?.results;
 
     let intro = format!("preparing {} events...", fab_events.len());
     info!("{}", intro);
     ctx.say(intro).await?;
 
     //do the thing
-    let i = discord_event::schedule_events(ctx, fab_events).await?;
+    let i = discord_event::schedule_events(ctx, &fab_events).await?;
 
-    let final_words = format!("Successfully scheduled {} events", i);
+    let final_words = format!("scheduled {} events, skipped {}", i, fab_events.len());
     info!("{final_words}");
     ctx.say(final_words).await?;
     Ok(())
 }
 
-/// Get a list of events in the choosen city.
+/// Get a list of Flesh and Blood events in the choosen city.
 #[poise::command(slash_command, prefix_command, on_error = "error_hander")]
 pub async fn events(ctx: Context<'_>, #[description = "city:"] city: City) -> Result<(), Error> {
 
-    let response = get_fab_events(&city).await?;
-    let lines = format_fab_events(response)?;
+    let response: ApiResponse = ApiResponse::get_fab_events(&city).await?;
+    let lines: Vec<String> = response.format_fab_events()?;
 
-    let message = lines.join("\r\n");
+    let message: String = lines.join("\n");
     ctx.say(message).await?;
     Ok(())
 }
@@ -49,7 +50,7 @@ pub async fn help(
     Ok(())
 }
 
-async fn error_hander(error: poise::FrameworkError<'_, Data, Error>) {
+async fn error_hander(error: poise::FrameworkError<'_, (), Error>) {
     println!("{}", error);
     error!("{}", error);
 }

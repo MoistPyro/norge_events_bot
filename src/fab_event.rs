@@ -1,10 +1,10 @@
-use crate::Error;
+use crate::command_options::{City, Country};
 use std::fmt::Display;
-use std::str::FromStr;
 
 use chrono::{DateTime, Duration, FixedOffset, Local};
 use reqwest::ClientBuilder;
 use serde::Deserialize;
+use serenity::all::ScheduledEvent;
 
 const FAB_API_URL: &str = "https://gem.fabtcg.com/api/v1/locator/events";
 
@@ -30,7 +30,7 @@ pub struct FabEvent {
     pub description: String,
     status: String,
     format_name: String,
-    country: String,
+    country: Country,
     player_cap: Option<i32>,
     live_coverage: bool,
     lat: f64,
@@ -39,10 +39,68 @@ pub struct FabEvent {
     distance_unit: String,
 }
 
+impl ApiResponse {
+
+    pub async fn get_fab_events(city: &City) -> Result<ApiResponse, reqwest::Error> {
+        let client = ClientBuilder::new()
+            .https_only(true)
+            .build()?;
+
+        let query = &[("search", city.as_ref())];
+        let request = client
+            .get(FAB_API_URL)
+            .query(query)
+            .build()?;
+
+        let response: ApiResponse = client
+            .execute(request)
+            .await?
+            .json()
+            .await?;
+
+        Ok(response)
+    }
+
+    pub fn format_fab_events(self) -> Result<Vec<String>, reqwest::Error> {
+
+        let mut event_list_lines = vec!["```".to_string(), ["="; 80].join(""), format!("id | Events                           | location             | start time       ")];
+
+        let mut response_lines: Vec<String> = self
+            .results
+            .iter()
+            .enumerate()
+            .map(|(i, event)| {
+                let mut nick = event.nickname.clone();
+                nick.truncate(32);
+
+                let format_string = "%a %d.%m - %H:%M";
+
+                format!(
+                    "{:2} | {:<32} | {:<20} | {:18}",
+                    i+1, nick, event.organiser_name, event.get_start_time_local().format(format_string)
+                )
+            })
+            .collect();
+
+        event_list_lines.append(&mut response_lines);
+        event_list_lines.push("```".to_string());
+
+        Ok(event_list_lines)
+    }
+}
+
 impl FabEvent {
     pub fn get_start_time_local(&self) -> DateTime<Local> {
         let temp: DateTime<Local> = DateTime::from(self.start_time);
         temp + Duration::hours(10)
+    }
+
+    pub fn is_already_imported(&self, active_events: &Vec<ScheduledEvent>) -> bool {
+        let exact_matches = active_events.iter()
+        .filter(|e| e.start_time.naive_utc() == self.get_start_time_local().naive_utc() && e.name == self.nickname)
+        .count();
+
+        exact_matches != 0
     }
 }
 
@@ -52,41 +110,6 @@ impl Display for FabEvent {
     }
 }
 
-#[derive(Debug, poise::ChoiceParameter)]
-pub enum City {
-    Oslo,
-    Stavanger,
-    Drammen,
-    Lillehammer,
-    Bodø,
-}
-
-impl AsRef<str> for City {
-    fn as_ref(&self) -> &str {
-        match self {
-            City::Oslo => "Oslo, Norge",
-            City::Stavanger => "Stavanger, Norge",
-            City::Drammen => "Drammen, Norge",
-            City::Lillehammer => "Lillehammer, Norge",
-            City::Bodø => "Bodø, Norge",
-        }
-    }
-}
-
-impl FromStr for City {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Oslo" | "oslo" => Ok(Self::Oslo),
-            "Stavanger" | "stavanger" => Ok(Self::Stavanger),
-            "Drammen" | "drammen" => Ok(Self::Drammen),
-            "Lillehammer" | "lillehammer" => Ok(Self::Lillehammer),
-            "Bodø" | "bodø" => Ok(Self::Bodø),
-            x => Err(x.into())
-        }
-    }
-}
 
 pub async fn get_fab_events(city: &City) -> Result<ApiResponse, reqwest::Error> {
     let client = ClientBuilder::new()
@@ -106,31 +129,4 @@ pub async fn get_fab_events(city: &City) -> Result<ApiResponse, reqwest::Error> 
         .await?;
 
     Ok(response)
-}
-
-pub fn format_fab_events(response: ApiResponse) -> Result<Vec<String>, reqwest::Error> {
-
-    let mut event_list_lines = vec!["```".to_string(), ["="; 80].join(""), format!("id | Events                           | location             | start time       ")];
-
-    let mut response_lines: Vec<String> = response
-        .results
-        .iter()
-        .enumerate()
-        .map(|(i, event)| {
-            let mut nick = event.nickname.clone();
-            nick.truncate(32);
-
-            let format_string = "%a %d.%m - %H:%M";
-
-            format!(
-                "{:2} | {:<32} | {:<20} | {:18}",
-                i+1, nick, event.organiser_name, event.get_start_time_local().format(format_string)
-            )
-        })
-        .collect();
-
-    event_list_lines.append(&mut response_lines);
-    event_list_lines.push("```".to_string());
-
-    Ok(event_list_lines)
 }
