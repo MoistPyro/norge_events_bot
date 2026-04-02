@@ -2,11 +2,10 @@ use crate::Error;
 use std::fmt::Display;
 use std::str::FromStr;
 
-use chrono::Duration;
+use chrono::{DateTime, Duration};
+use chrono::{FixedOffset, Local};
 use reqwest::ClientBuilder;
 use serde::Deserialize;
-use chrono::DateTime;
-use chrono::Utc;
 
 const FAB_API_URL: &str = "https://gem.fabtcg.com/api/v1/locator/events";
 
@@ -26,7 +25,7 @@ pub struct FabEvent {
     tournament_type: String,
     pub nickname: String,
     organiser_store_slug: String,
-    pub start_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
     pub address: String,
     event_link: Option<String>,
     pub description: String,
@@ -41,22 +40,26 @@ pub struct FabEvent {
     distance_unit: String,
 }
 
+impl FabEvent {
+    pub fn get_start_time_local(&self) -> DateTime<Local> {
+        let temp: DateTime<Local> = DateTime::from(self.start_time);
+        temp + Duration::hours(10)
+    }
+}
+
 impl Display for FabEvent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} at {}", self.nickname, self.organiser_name)
     }
 }
 
-impl FabEvent {
-    fn fix_time(&self) -> DateTime<Utc> {
-        self.start_time + Duration::hours(12)
-    }
-}
-
+#[derive(Debug, poise::ChoiceParameter)]
 pub enum City {
     Oslo,
     Stavanger,
     Drammen,
+    Lillehammer,
+    Bodø,
 }
 
 impl AsRef<str> for City {
@@ -65,6 +68,8 @@ impl AsRef<str> for City {
             City::Oslo => "Oslo, Norge",
             City::Stavanger => "Stavanger, Norge",
             City::Drammen => "Drammen, Norge",
+            City::Lillehammer => "Lillehammer, Norge",
+            City::Bodø => "Bodø, Norge",
         }
     }
 }
@@ -77,6 +82,8 @@ impl FromStr for City {
             "Oslo" | "oslo" => Ok(Self::Oslo),
             "Stavanger" | "stavanger" => Ok(Self::Stavanger),
             "Drammen" | "drammen" => Ok(Self::Drammen),
+            "Lillehammer" | "lillehammer" => Ok(Self::Lillehammer),
+            "Bodø" | "bodø" => Ok(Self::Bodø),
             x => Err(x.into())
         }
     }
@@ -93,33 +100,38 @@ pub async fn get_fab_events(city: &City) -> Result<ApiResponse, reqwest::Error> 
         .query(query)
         .build()?;
 
-    client.execute(request).await?
-        .json().await
+    let response: ApiResponse = client
+        .execute(request)
+        .await?
+        .json()
+        .await?;
+
+    Ok(response)
 }
 
-pub async fn format_fab_events(city: &City) -> Result<Vec<String>, reqwest::Error> {
-    let response = get_fab_events(city).await?;
+pub fn format_fab_events(response: ApiResponse) -> Result<Vec<String>, reqwest::Error> {
 
-    let mut event_list_lines = vec![format!("Events in {}:", city.as_ref())];
+    let mut event_list_lines = vec!["```".to_string(), ["="; 80].join(""), format!("id | Events                           | location             | start time       ")];
+
     let mut response_lines: Vec<String> = response
         .results
         .iter()
         .enumerate()
         .map(|(i, event)| {
             let mut nick = event.nickname.clone();
-            nick.truncate(34);
+            nick.truncate(32);
 
-            let right_time = event.fix_time();
-            let format_string = "%A %d.%m - %H:%M";
+            let format_string = "%a %d.%m - %H:%M";
 
             format!(
-                "{}: {:<35} at {}\r\nstart time: {}",
-                i+1, nick, event.organiser_name, right_time.format(format_string)
+                "{:2} | {:<32} | {:<20} | {:18}",
+                i+1, nick, event.organiser_name, event.get_start_time_local().format(format_string)
             )
         })
         .collect();
 
     event_list_lines.append(&mut response_lines);
+    event_list_lines.push("```".to_string());
 
     Ok(event_list_lines)
 }

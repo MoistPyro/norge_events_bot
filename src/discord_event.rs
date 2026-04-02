@@ -1,20 +1,25 @@
-use chrono::Duration;
-use serenity::all::ScheduledEvent;
-use serenity::all::ScheduledEventType;
+use chrono::{Duration, Local};
+use serenity::all::{ScheduledEvent, ScheduledEventType};
 use serenity::model::id::GuildId;
 use serenity::builder::CreateScheduledEvent;
 use tokio_stream::StreamExt;
-use tracing::{debug, info};
-
+use tracing::{error, info};
 use crate::Error;
 use crate::Context;
 use crate::fab_event::FabEvent;
 
 async fn create_event(ctx: Context<'_>, fab_event: &FabEvent) -> Result<ScheduledEvent, Error> {
     let name = &fab_event.nickname;
-    let end_time = fab_event.start_time + Duration::hours(2);
+    let start_time = fab_event.get_start_time_local();
+    let end_time = fab_event.get_start_time_local() + Duration::hours(2);
+    let now = Local::now();
 
-    let discord_event = CreateScheduledEvent::new(ScheduledEventType::External, name, fab_event.start_time)
+    if start_time < now || end_time < now {
+        error!("{} is in the past; {} is now.", start_time, now);
+        return Err("time is in the past".into());
+    }
+
+    let discord_event = CreateScheduledEvent::new(ScheduledEventType::External, name, start_time)
         .end_time(end_time)
         .location(&fab_event.address)
         .description(&fab_event.description);
@@ -26,11 +31,15 @@ async fn create_event(ctx: Context<'_>, fab_event: &FabEvent) -> Result<Schedule
 }
 
 pub async fn schedule_events(ctx: Context<'_>, fab_events: Vec<FabEvent>) -> Result<usize, Error> {
+
+    let guild = ctx.guild_id().ok_or("failed to find guild id.")?;
+    let active_events = guild.scheduled_events(ctx, false).await?;
+
     let mut event_stream = tokio_stream::iter(fab_events);
     
     let mut i = 0;
     while let Some(e) = event_stream.next().await {
-        if check_sameness(ctx, &e).await? {
+        if check_sameness(&e, &active_events)? {
             info!("skipping {}", e);
             continue;
         }
@@ -42,20 +51,11 @@ pub async fn schedule_events(ctx: Context<'_>, fab_events: Vec<FabEvent>) -> Res
     Ok(i)
 }
 
-pub async fn check_sameness(ctx: Context<'_> , fab_event: &FabEvent) -> Result<bool, Error> {
+fn check_sameness(fab_event: &FabEvent, active_events: &Vec<ScheduledEvent>) -> Result<bool, Error> {
 
-    let guild = ctx.guild_id().ok_or("failed to find guild id.")?;
-    let active_events = guild.scheduled_events(ctx, false).await?;
+    let exact_matches = active_events.iter()
+        .filter(|e| e.start_time.naive_utc() == fab_event.get_start_time_local().naive_utc() && e.name == fab_event.nickname)
+        .count();
 
-    let mut already_scheduled = false;
-
-    for e in active_events {
-        let same_name = e.name == fab_event.nickname;
-        let same_day = e.start_time.naive_utc() == fab_event.start_time.naive_utc();
-
-        debug!(e.name, same_name, same_day);
-        if same_name && same_day { already_scheduled = true };
-    }
-
-    Ok(already_scheduled)
+    Ok(exact_matches != 0)
 }
