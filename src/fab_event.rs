@@ -1,33 +1,35 @@
+use crate::Error;
+use std::fmt::Display;
+use std::str::FromStr;
+
 use chrono::Duration;
-use chrono::Local;
 use reqwest::ClientBuilder;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use chrono::DateTime;
 use chrono::Utc;
 
 const FAB_API_URL: &str = "https://gem.fabtcg.com/api/v1/locator/events";
 
 #[derive(Debug, Deserialize)]
-struct ApiResponse {
+pub struct ApiResponse {
     count: i32,
     next: Option<String>,
     previous: Option<String>,
-    results: Vec<FabEvent>,
+    pub results: Vec<FabEvent>,
     filters: serde_json::Value,
 }
 
-
 #[derive(Debug, Deserialize)]
-struct FabEvent {
+pub struct FabEvent {
     id: i32,
     organiser_name: String,
     tournament_type: String,
-    nickname: String,
+    pub nickname: String,
     organiser_store_slug: String,
-    start_time: DateTime<Utc>,
-    address: String,
+    pub start_time: DateTime<Utc>,
+    pub address: String,
     event_link: Option<String>,
-    description: String,
+    pub description: String,
     status: String,
     format_name: String,
     country: String,
@@ -37,6 +39,12 @@ struct FabEvent {
     lon: f64,
     distance: f64,
     distance_unit: String,
+}
+
+impl Display for FabEvent {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} at {}", self.nickname, self.organiser_name)
+    }
 }
 
 impl FabEvent {
@@ -61,7 +69,20 @@ impl AsRef<str> for City {
     }
 }
 
-async fn get_fab_events(city: &City) -> Result<ApiResponse, reqwest::Error> {
+impl FromStr for City {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Oslo" | "oslo" => Ok(Self::Oslo),
+            "Stavanger" | "stavanger" => Ok(Self::Stavanger),
+            "Drammen" | "drammen" => Ok(Self::Drammen),
+            x => Err(x.into())
+        }
+    }
+}
+
+pub async fn get_fab_events(city: &City) -> Result<ApiResponse, reqwest::Error> {
     let client = ClientBuilder::new()
         .https_only(true)
         .build()?;
