@@ -1,9 +1,10 @@
 use tracing::{info, error};
 
-use crate::{Context, Data, Error, discord_event, fab_event::{City, format_fab_events, get_fab_events}};
+use crate::{Context, Data, Error, discord_event};
+use crate::fab_event::{City, format_fab_events, get_fab_events};
 
 /// import (schedule) events from event locator.
-#[poise::command(slash_command, prefix_command, check = "check", on_error = "error_hander")]
+#[poise::command(slash_command, prefix_command, required_permissions = "CREATE_EVENTS", on_error = "error_hander")]
 pub async fn post(ctx: Context<'_>, #[description = "city:"] city: City) -> Result<(), Error> {
 
     let fab_events = get_fab_events(&city).await?.results;
@@ -33,17 +34,6 @@ pub async fn events(ctx: Context<'_>, #[description = "city:"] city: City) -> Re
     Ok(())
 }
 
-async fn check(ctx: Context<'_>) -> Result<bool, Error> {
-
-    // We discriminate against users starting with an X
-    Ok(!ctx.author().name.starts_with('X'))
-}
-
-async fn error_hander(error: poise::FrameworkError<'_, Data, Error>) {
-    println!("{}", error);
-    error!("{}", error);
-}
-
 #[poise::command(prefix_command, slash_command)]
 pub async fn help(
     ctx: Context<'_>,
@@ -51,10 +41,15 @@ pub async fn help(
 ) -> Result<(), Error> {
     let config = poise::builtins::HelpConfiguration {
         extra_text_at_bottom: "\
-Type ?help command for more info on a command.
-You can edit your message to the bot and the bot will edit its response.",
+        Type ?help command for more info on a command.
+        You can edit your message to the bot and the bot will edit its response.",
         ..Default::default()
     };
     poise::builtins::help(ctx, command.as_deref(), config).await?;
     Ok(())
+}
+
+async fn error_hander(error: poise::FrameworkError<'_, Data, Error>) {
+    println!("{}", error);
+    error!("{}", error);
 }

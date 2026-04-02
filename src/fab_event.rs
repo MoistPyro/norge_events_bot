@@ -2,8 +2,7 @@ use crate::Error;
 use std::fmt::Display;
 use std::str::FromStr;
 
-use chrono::{DateTime, Duration};
-use chrono::{FixedOffset, Local};
+use chrono::{DateTime, Duration, FixedOffset, Local};
 use reqwest::ClientBuilder;
 use serde::Deserialize;
 
