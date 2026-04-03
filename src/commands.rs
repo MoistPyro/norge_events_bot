@@ -3,7 +3,7 @@ use tracing::{info, error};
 use crate::command_options::City;
 use crate::tournament_event::TournamentEvent;
 use crate::{Context, Error, discord_event, tournament_event};
-use crate::fab_event::ApiResponse;
+use crate::lss_api::ApiResponse;
 
 /// import / schedule events from fabtcg event locator at the choosen city.
 #[poise::command(slash_command, prefix_command, required_permissions = "CREATE_EVENTS", on_error = "error_hander")]

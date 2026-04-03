@@ -7,7 +7,7 @@ use tracing_subscriber::{self, fmt::format};
 
 use crate::commands::*;
 
-mod fab_event;
+mod lss_api;
 mod discord_event;
 mod tournament_event;
 mod commands;
