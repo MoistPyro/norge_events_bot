@@ -23,7 +23,7 @@ async fn main() {
     
     dotenv::dotenv().expect("Failed to load .env file");
 
-    let fmt_event = format().with_line_number(true);
+    let fmt_event = format().with_line_number(false);
     
     tracing_subscriber::fmt()
         .with_max_level(LOG_LVL)
@@ -37,7 +37,7 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![events(), post(), help()],
+            commands: vec![events(), post(), purge(), help()],
             ..Default::default()
         })
         .setup(|ctx, ready, framework| {

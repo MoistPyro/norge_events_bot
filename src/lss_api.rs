@@ -1,5 +1,5 @@
 use crate::Error;
-use crate::api_types::{City, Country};
+use crate::api_types::{City, Country, Format, EventType};
 use crate::tournament_event::TournamentEvent;
 
 use chrono::{DateTime, Duration, FixedOffset, Local};
@@ -17,7 +17,8 @@ pub struct ApiResponse {
     #[serde(skip)]
     previous: (),
     results: Vec<FabEvent>,
-    filters: serde_json::Value,
+    #[serde(skip)]
+    filters: (),
 }
 
 #[derive(Debug, Deserialize)]
@@ -25,7 +26,7 @@ pub struct ApiResponse {
 pub struct FabEvent {
     id: i32,
     pub organiser_name: String,
-    tournament_type: String,
+    tournament_type: Format,
     pub nickname: String,
     organiser_store_slug: String,
     pub start_time: DateTime<FixedOffset>,
@@ -33,7 +34,7 @@ pub struct FabEvent {
     event_link: Option<String>,
     pub description: String,
     status: String,
-    format_name: String,
+    format_name: EventType,
     pub country: Country,
     player_cap: Option<i32>,
     live_coverage: bool,
