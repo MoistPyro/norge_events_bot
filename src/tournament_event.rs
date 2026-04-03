@@ -3,7 +3,7 @@ use std::fmt::Display;
 use chrono::{DateTime, Local};
 use serenity::all::ScheduledEvent;
 
-use crate::{command_options::Country, lss_api::FabEvent};
+use crate::{api_types::Country, lss_api::FabEvent};
 
 pub struct TournamentEvent {
     pub organiser_name: String,

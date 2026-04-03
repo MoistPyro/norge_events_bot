@@ -1,6 +1,6 @@
 use tracing::{info, error};
 
-use crate::command_options::City;
+use crate::api_types::City;
 use crate::tournament_event::TournamentEvent;
 use crate::{Context, Error, discord_event, tournament_event};
 use crate::lss_api::ApiResponse;

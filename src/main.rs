@@ -11,7 +11,7 @@ mod lss_api;
 mod discord_event;
 mod tournament_event;
 mod commands;
-mod command_options;
+mod api_types;
 
 const LOG_LVL: Level = Level::INFO;
 

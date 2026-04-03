@@ -1,5 +1,5 @@
 use crate::Error;
-use crate::command_options::{City, Country};
+use crate::api_types::{City, Country};
 use crate::tournament_event::TournamentEvent;
 
 use chrono::{DateTime, Duration, FixedOffset, Local};
