@@ -1,14 +1,16 @@
 use tracing::{info, error};
 
-use crate::command_options::{City, Country};
-use crate::{Context, Error, discord_event};
-use crate::fab_event::{ApiResponse, FabEvent};
+use crate::command_options::City;
+use crate::tournament_event::TournamentEvent;
+use crate::{Context, Error, discord_event, tournament_event};
+use crate::fab_event::ApiResponse;
 
 /// import / schedule events from fabtcg event locator at the choosen city.
 #[poise::command(slash_command, prefix_command, required_permissions = "CREATE_EVENTS", on_error = "error_hander")]
 pub async fn post(ctx: Context<'_>, #[description = "city:"] city: City) -> Result<(), Error> {
 
-    let fab_events: Vec<FabEvent> = ApiResponse::get_fab_events(&city).await?.results;
+    let response: ApiResponse = ApiResponse::get_response(&city).await?;
+    let fab_events: Vec<TournamentEvent> = response.get_tournaments();
 
     let intro = format!("preparing {} events...", fab_events.len());
     info!("{}", intro);
@@ -27,8 +29,9 @@ pub async fn post(ctx: Context<'_>, #[description = "city:"] city: City) -> Resu
 #[poise::command(slash_command, prefix_command, on_error = "error_hander")]
 pub async fn events(ctx: Context<'_>, #[description = "city:"] city: City) -> Result<(), Error> {
 
-    let response: ApiResponse = ApiResponse::get_fab_events(&city).await?;
-    let lines: Vec<String> = response.format_fab_events()?;
+    let response: ApiResponse = ApiResponse::get_response(&city).await?;
+    let fab_events: Vec<TournamentEvent> = response.get_tournaments();
+    let lines: Vec<String> = tournament_event::format_fab_events(fab_events);
 
     let message: String = lines.join("\n");
     ctx.say(message).await?;

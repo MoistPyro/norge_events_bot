@@ -11,10 +11,10 @@ pub enum City {
     Lillehammer,
     Bodø,
     Stockholm,
-    Kopenhagen,
+    København,
 }
 
-#[derive(Debug, Deserialize, poise::ChoiceParameter)]
+#[derive(Debug, Deserialize, poise::ChoiceParameter, PartialEq, Eq, Clone, Copy)]
 pub enum Country {
     NO,
     SE,
@@ -30,7 +30,22 @@ impl AsRef<str> for City {
             City::Lillehammer => "Lillehammer, Norge",
             City::Bodø => "Bodø, Norge",
             City::Stockholm => "Stockholm, Sverige",
-            City::Kopenhagen => "Kopenhagen, Danmark",
+            City::København => "København, Danmark",
+        }
+    }
+}
+
+impl FromStr for City {
+    type Err = Error;
+    
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "Oslo" | "oslo" => Ok(Self::Oslo),
+            "Stavanger" | "stavanger" => Ok(Self::Stavanger),
+            "Drammen" | "drammen" => Ok(Self::Drammen),
+            "Lillehammer" | "lillehammer" => Ok(Self::Lillehammer),
+            "Bodø" | "bodø" => Ok(Self::Bodø),
+            x => Err(x.into())
         }
     }
 }
@@ -41,22 +56,7 @@ impl From<City> for Country {
             City::Oslo | City::Stavanger | City::Drammen |
             City::Lillehammer | City::Bodø => Self::NO,
             City::Stockholm => Self::SE,
-            City::Kopenhagen => Self::DK,
-        }
-    }
-}
-
-impl FromStr for City {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "Oslo" | "oslo" => Ok(Self::Oslo),
-            "Stavanger" | "stavanger" => Ok(Self::Stavanger),
-            "Drammen" | "drammen" => Ok(Self::Drammen),
-            "Lillehammer" | "lillehammer" => Ok(Self::Lillehammer),
-            "Bodø" | "bodø" => Ok(Self::Bodø),
-            x => Err(x.into())
+            City::København => Self::DK,
         }
     }
 }

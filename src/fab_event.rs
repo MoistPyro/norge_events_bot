@@ -1,26 +1,30 @@
+use crate::Error;
 use crate::command_options::{City, Country};
-use std::fmt::Display;
+use crate::tournament_event::TournamentEvent;
 
 use chrono::{DateTime, Duration, FixedOffset, Local};
-use reqwest::ClientBuilder;
+use reqwest::{ClientBuilder, IntoUrl};
 use serde::Deserialize;
-use serenity::all::ScheduledEvent;
 
 const FAB_API_URL: &str = "https://gem.fabtcg.com/api/v1/locator/events";
+const KIWI_BULLSHIT_MOD: i64 = 10;
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct ApiResponse {
     count: i32,
     next: Option<String>,
-    previous: Option<String>,
-    pub results: Vec<FabEvent>,
+    #[serde(skip)]
+    previous: (),
+    results: Vec<FabEvent>,
     filters: serde_json::Value,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct FabEvent {
     id: i32,
-    organiser_name: String,
+    pub organiser_name: String,
     tournament_type: String,
     pub nickname: String,
     organiser_store_slug: String,
@@ -30,103 +34,74 @@ pub struct FabEvent {
     pub description: String,
     status: String,
     format_name: String,
-    country: Country,
+    pub country: Country,
     player_cap: Option<i32>,
     live_coverage: bool,
-    lat: f64,
-    lon: f64,
-    distance: f64,
-    distance_unit: String,
+    #[serde(skip)]
+    lat: (),
+    #[serde(skip)]
+    lon: (),
+    #[serde(skip)]
+    distance: (),
+    #[serde(skip)]
+    distance_unit: (),
 }
 
 impl ApiResponse {
 
-    pub async fn get_fab_events(city: &City) -> Result<ApiResponse, reqwest::Error> {
-        let client = ClientBuilder::new()
-            .https_only(true)
-            .build()?;
+    pub async fn get_response(city: &City) -> Result<Self, Error> {
+
+        let client: reqwest::Client = ClientBuilder::new().https_only(true).build()?;
 
         let query = &[("search", city.as_ref())];
-        let request = client
-            .get(FAB_API_URL)
-            .query(query)
-            .build()?;
+        let request = client.get(FAB_API_URL).query(query).build()?;
 
-        let response: ApiResponse = client
-            .execute(request)
-            .await?
-            .json()
-            .await?;
+        let mut response: ApiResponse = client.execute(request).await?.json().await?;
+
+        while let Some(ref url) = response.next {
+            
+            let next: ApiResponse = Self::from_url(url).await?;
+            response.flatten_next(next)?;
+        }
 
         Ok(response)
     }
 
-    pub fn format_fab_events(self) -> Result<Vec<String>, reqwest::Error> {
+    async fn from_url<U: IntoUrl>(url: U) -> Result<Self, Error> {
 
-        let mut event_list_lines = vec!["```".to_string(), ["="; 80].join(""), format!("id | Events                           | location             | start time       ")];
+        let client: reqwest::Client = ClientBuilder::new()
+            .https_only(true)
+            .build()?;
 
-        let mut response_lines: Vec<String> = self
-            .results
-            .iter()
-            .enumerate()
-            .map(|(i, event)| {
-                let mut nick = event.nickname.clone();
-                nick.truncate(32);
+        let request: reqwest::Request = client.get(url).build()?;
+        let response: ApiResponse = client.execute(request).await?.json().await?;
+        Ok(response)
+    }
 
-                let format_string = "%a %d.%m - %H:%M";
+    fn flatten_next(&mut self, mut other: Self) -> Result<(), Error> {
 
-                format!(
-                    "{:2} | {:<32} | {:<20} | {:18}",
-                    i+1, nick, event.organiser_name, event.get_start_time_local().format(format_string)
-                )
-            })
-            .collect();
+        self.next = other.next;
+        self.results.append(&mut other.results);
 
-        event_list_lines.append(&mut response_lines);
-        event_list_lines.push("```".to_string());
+        Ok(())
+    }
 
-        Ok(event_list_lines)
+    pub fn get_tournaments(&self) -> Vec<TournamentEvent> {
+
+        let mut r = vec![];
+
+        for event in self.results.iter() {
+            r.push(event.into());
+        }
+
+        r
     }
 }
 
 impl FabEvent {
-    pub fn get_start_time_local(&self) -> DateTime<Local> {
+    pub(crate) fn get_start_time_local(&self) -> DateTime<Local> {
+
         let temp: DateTime<Local> = DateTime::from(self.start_time);
-        temp + Duration::hours(10)
+        temp + Duration::hours(KIWI_BULLSHIT_MOD)
     }
-
-    pub fn is_already_imported(&self, active_events: &Vec<ScheduledEvent>) -> bool {
-        let exact_matches = active_events.iter()
-        .filter(|e| e.start_time.naive_utc() == self.get_start_time_local().naive_utc() && e.name == self.nickname)
-        .count();
-
-        exact_matches != 0
-    }
-}
-
-impl Display for FabEvent {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} at {}", self.nickname, self.organiser_name)
-    }
-}
-
-
-pub async fn get_fab_events(city: &City) -> Result<ApiResponse, reqwest::Error> {
-    let client = ClientBuilder::new()
-        .https_only(true)
-        .build()?;
-
-    let query = &[("search", city.as_ref())];
-    let request = client
-        .get(FAB_API_URL)
-        .query(query)
-        .build()?;
-
-    let response: ApiResponse = client
-        .execute(request)
-        .await?
-        .json()
-        .await?;
-
-    Ok(response)
 }

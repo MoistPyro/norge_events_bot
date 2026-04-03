@@ -9,13 +9,11 @@ use crate::commands::*;
 
 mod fab_event;
 mod discord_event;
+mod tournament_event;
 mod commands;
 mod command_options;
 
 const LOG_LVL: Level = Level::INFO;
-
-#[derive(Debug)]
-struct Data {}
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, (), Error>;
