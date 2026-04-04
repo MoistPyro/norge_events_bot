@@ -1,4 +1,4 @@
-use chrono::{DateTime, Duration, Local};
+use chrono::{DateTime, Local};
 use serenity::model::guild::{ScheduledEvent, ScheduledEventType};
 use serenity::model::id::GuildId;
 use serenity::builder::CreateScheduledEvent;
@@ -13,7 +13,7 @@ async fn create_event(ctx: Context<'_>, fab_event: &TournamentEvent) -> Result<S
 
     let name: &str = &fab_event.event_name;
     let start_time: DateTime<Local> = fab_event.start_time;
-    let end_time: DateTime<Local> = fab_event.start_time + Duration::hours(2);
+    let end_time: DateTime<Local> = fab_event.start_time + fab_event.calculate_duration();
     let now: DateTime<Local> = Local::now();
 
     if start_time < now || end_time < now {

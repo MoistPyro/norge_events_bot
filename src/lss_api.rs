@@ -26,7 +26,7 @@ pub struct ApiResponse {
 pub struct FabEvent {
     id: i32,
     pub organiser_name: String,
-    tournament_type: Format,
+    pub tournament_type: Format,
     pub nickname: String,
     organiser_store_slug: String,
     pub start_time: DateTime<FixedOffset>,
@@ -34,9 +34,9 @@ pub struct FabEvent {
     event_link: Option<String>,
     pub description: String,
     status: String,
-    format_name: EventType,
-    pub country: Country,
-    player_cap: Option<i32>,
+    pub format_name: EventType,
+    country: Country,
+    pub player_cap: Option<i32>,
     live_coverage: bool,
     #[serde(skip)]
     lat: (),
@@ -87,15 +87,18 @@ impl ApiResponse {
         Ok(())
     }
 
+    ///convert from the api type FabEvent, to the more usefull TournamentEvent type
     pub fn get_tournaments(&self) -> Vec<TournamentEvent> {
 
-        let mut r = vec![];
+        // let mut r = vec![];
 
-        for event in self.results.iter() {
-            r.push(event.into());
-        }
+        // for event in self.results.iter() {
+        //     r.push(event.into());
+        // }
 
-        r
+        // r
+
+        self.results.iter().map(|e| e.into()).collect()
     }
 }
 

@@ -1,9 +1,10 @@
 use std::fmt::Display;
 
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Duration, Local};
 use serenity::all::ScheduledEvent;
 
-use crate::{api_types::Country, lss_api::FabEvent};
+use crate::lss_api::FabEvent;
+use crate::api_types::{EventType, Format};
 
 pub struct TournamentEvent {
     pub organiser_name: String,
@@ -11,7 +12,9 @@ pub struct TournamentEvent {
     pub start_time: DateTime<Local>,
     pub address: String,
     pub description: String,
-    country: Country,
+    format: Format,
+    event_type: EventType,
+    player_cap: Option<i32>,
 }
 
 impl PartialEq<ScheduledEvent> for TournamentEvent {
@@ -36,7 +39,9 @@ impl From<&FabEvent> for TournamentEvent {
             start_time: value.get_start_time_local(),
             address: value.address.clone(),
             description: value.description.clone(),
-            country: value.country.clone()
+            format: value.tournament_type,
+            event_type: value.format_name,
+            player_cap: value.player_cap,
         }
     }
 }
@@ -50,7 +55,9 @@ impl From<FabEvent> for TournamentEvent {
             start_time: start_time,
             address: value.address,
             description: value.description,
-            country: value.country
+            format: value.tournament_type,
+            event_type: value.format_name,
+            player_cap: value.player_cap,
         }
     }
 }
@@ -82,6 +89,10 @@ impl TournamentEvent {
         let start_time = self.start_time.format(format_string);
 
         format!("| {:<32} | {:<20} | {:18}|", nick, org_name, start_time)
+    }
+
+    pub fn calculate_duration(&self) -> Duration {
+        self.event_type.duration(self.format, self.player_cap).unwrap_or(Duration::hours(2))
     }
 }
 
