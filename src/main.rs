@@ -37,7 +37,7 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![events(), post(), purge(), help()],
+            commands: vec![post(), events(), help()],
             ..Default::default()
         })
         .setup(|ctx, ready, framework| {

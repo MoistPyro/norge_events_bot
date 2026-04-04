@@ -1,4 +1,3 @@
-use serenity::all::ScheduledEventId;
 use tracing::{info, error};
 
 use crate::api_types::{City, DenmarkCity, NorwayCity, SwedenCity};
@@ -93,29 +92,6 @@ pub async fn help(
         ..Default::default()
     };
     poise::builtins::help(ctx, command.as_deref(), config).await?;
-    Ok(())
-}
-
-/// delete all events.
-#[poise::command(
-    slash_command,
-    prefix_command,
-    required_permissions = "MANAGE_EVENTS",
-    on_error = "error_hander"
-)]
-pub async fn purge(ctx: Context<'_>) -> Result<(), Error> {
-
-    let guild = ctx.guild_id().ok_or("failed to find guild id.")?;
-    let active_events = guild.scheduled_events(ctx, false).await?;
-    let event_ids: Vec<ScheduledEventId> = active_events
-        .iter()
-        .map(|event| event.id)
-        .collect();
-
-    for id in event_ids {
-        guild.delete_scheduled_event(ctx, id).await?;
-    }
-    
     Ok(())
 }
 
