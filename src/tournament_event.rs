@@ -91,6 +91,7 @@ impl TournamentEvent {
         format!("| {:<32} | {:<20} | {:18}|", nick, org_name, start_time)
     }
 
+    ///returns the approximate duration of the event, or two hours.
     pub fn calculate_duration(&self) -> Duration {
         self.event_type.duration(self.format, self.player_cap).unwrap_or(Duration::hours(2))
     }
