@@ -1,3 +1,5 @@
+use poise::CreateReply;
+
 use crate::{Context, Error, tournament_event};
 use crate::lss_api::ApiResponse;
 use crate::api_types::City;
@@ -13,9 +15,8 @@ pub async fn events(ctx: Context<'_>, #[description = "city:"] city: City) -> Re
 
     let response: ApiResponse = ApiResponse::get_from_city(&city).await?;
     let fab_events: Vec<tournament_event::TournamentEvent> = response.get_tournaments();
-    let lines: Vec<String> = tournament_event::format_fab_events(fab_events);
+    let message: CreateReply = tournament_event::format_embeds(fab_events);
 
-    let message: String = lines.join("\n");
-    ctx.say(message).await?;
+    ctx.send(message).await?;
     Ok(())
 }

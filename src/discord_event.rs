@@ -26,7 +26,7 @@ async fn create_event(ctx: Context<'_>, fab_event: &TournamentEvent) -> Result<S
         .location(&fab_event.address)
         .description(&fab_event.description);
 
-    let guild_id: GuildId = ctx.guild_id().ok_or("failed to find guild id.")?;
+    let guild_id: GuildId = ctx.guild_id().ok_or("called outside guild.")?;
 
     let ready_event: ScheduledEvent = guild_id.create_scheduled_event(ctx, discord_event).await?;
     Ok(ready_event)
@@ -34,8 +34,8 @@ async fn create_event(ctx: Context<'_>, fab_event: &TournamentEvent) -> Result<S
 
 pub async fn schedule_events(ctx: Context<'_>, fab_events: &Vec<TournamentEvent>) -> Result<usize, Error> {
 
-    let guild = ctx.guild_id().ok_or("failed to find guild id.")?;
-    let active_events = guild.scheduled_events(ctx, false).await?;
+    let guild_id: GuildId = ctx.guild_id().ok_or("called outside guild.")?;
+    let active_events = guild_id.scheduled_events(ctx, false).await?;
 
     active_events.iter().for_each(|e| debug!("{}", e.name));
 

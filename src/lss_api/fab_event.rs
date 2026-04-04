@@ -11,7 +11,7 @@ pub struct FabEvent {
     pub organiser_name: String,
     pub tournament_type: Format,
     pub nickname: String,
-    organiser_store_slug: String,
+    pub organiser_store_slug: String,
     pub start_time: DateTime<FixedOffset>,
     pub address: String,
     event_link: Option<String>,

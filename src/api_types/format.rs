@@ -1,7 +1,7 @@
 use chrono::Duration;
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
 pub enum Format {
     #[serde(rename = "Sealed Deck")]
     SealedDeck,

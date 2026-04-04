@@ -2,7 +2,7 @@ use chrono::Duration;
 use serde::Deserialize;
 use super::Format;
 
-#[derive(Debug, Deserialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
 pub enum EventType {
     #[serde(rename = "Armory Event")]
     ArmoryEvent,
