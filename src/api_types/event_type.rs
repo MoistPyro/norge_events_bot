@@ -4,24 +4,26 @@ use super::Format;
 
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
 pub enum EventType {
-    #[serde(rename = "Armory Event")]
+    #[serde(alias = "Armory Event")]
+    #[serde(alias = "armory event")]
     ArmoryEvent,
     Battlegrounds,
     Calling,
-    #[serde(rename = "Learn to Play Event")]
+    #[serde(alias = "Learn to Play Event")]
     LearnToPlay,
-    #[serde(rename = "National Championship")]
+    #[serde(alias = "National Championship")]
     NationalChampionship,
-    #[serde(rename = "On Demand")]
+    #[serde(alias = "On Demand")]
+    #[serde(alias = "on demand")]
     OnDemand,
-    #[serde(rename = "Pro Tour")]
+    #[serde(alias = "Pro Tour")]
     ProTour,
     Showdown,
-    #[serde(rename = "Social Play Event")]
+    #[serde(alias = "Social Play Event")]
     SocialPlayEvent,
-    #[serde(rename = "World Championship Qualifier")]
+    #[serde(alias = "World Championship Qualifier")]
     WorldChampionshipQualifier,
-    #[serde(rename = "World Premiere")]
+    #[serde(alias = "World Premiere")]
     WorldPremiere,
     #[serde(other)]
     Unknown
@@ -41,7 +43,7 @@ impl AsRef<str> for EventType {
             EventType::SocialPlayEvent => "Social Play Event",
             EventType::WorldChampionshipQualifier => "World Championship Qualifier",
             EventType::WorldPremiere => "World Premiere",
-            EventType::Unknown => "Unknown Format",
+            Self::Unknown => "?"
         }
     }
 }
@@ -66,12 +68,12 @@ impl EventType {
             EventType::WorldChampionshipQualifier => Some(if cap_based > 0 {cap_based} else {7}),
             EventType::Calling => Some(12),
             EventType::ProTour => Some(14),
-            EventType::Unknown => None,
+            EventType::Unknown => None
         }
     }
 
     /// returns None if event type is Unknown or if overflow (this will never happen)
-    pub fn duration(&self, format: Format, player_cap: Option<i32>) -> Option<Duration> {
+    pub fn duration(&self, format: &Format, player_cap: Option<i32>) -> Option<Duration> {
 
         self.rounds(player_cap).map(|r| {
             match self {
@@ -79,7 +81,7 @@ impl EventType {
                     .duration()
                     .checked_mul(6)
                     .zip(
-                        Format::ClassicConstructed
+                        Format::ClassicConstructed("!".to_string())
                         .duration()
                         .checked_mul(8))
                         .map(|(a, b)| a + b),

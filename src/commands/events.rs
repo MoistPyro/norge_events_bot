@@ -9,13 +9,13 @@ use super::error_hander;
 #[poise::command(
     slash_command,
     prefix_command,
-    on_error = "error_hander"
+    //on_error = "error_hander"
 )]
 pub async fn events(ctx: Context<'_>, #[description = "city:"] city: City) -> Result<(), Error> {
 
     let response: ApiResponse = ApiResponse::get_from_city(&city).await?;
     let fab_events: Vec<tournament_event::TournamentEvent> = response.get_tournaments();
-    let message: CreateReply = tournament_event::format_embeds(fab_events);
+    let message: CreateReply = tournament_event::format_fab_events(fab_events);
 
     ctx.send(message).await?;
     Ok(())

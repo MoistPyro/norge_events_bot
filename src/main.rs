@@ -21,7 +21,7 @@ type Context<'a> = poise::Context<'a, (), Error>;
 #[tokio::main]
 async fn main() {
     
-    dotenv::dotenv().expect("Failed to load .env file");
+    dotenv::dotenv().expect("expected a .env file in my folder");
 
     let fmt_event = format().with_line_number(false);
     
@@ -32,8 +32,6 @@ async fn main() {
 
     let token: String = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
     let intents: GatewayIntents = GatewayIntents::non_privileged() | GatewayIntents::GUILD_SCHEDULED_EVENTS;
-
-    info!("enabling intents {:?}", intents);
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
