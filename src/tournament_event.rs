@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::str::FromStr;
 use chrono::{DateTime, Duration, Local};
 use poise::CreateReply;
 use serenity::all::{Colour, CreateEmbed, ScheduledEvent};
@@ -41,8 +42,8 @@ impl From<&FabEvent> for TournamentEvent {
             start_time: value.get_start_time_local(),
             address: value.address.clone(),
             description: value.description.clone(),
-            format: value.tournament_type.clone(),
-            event_type: value.format_name,
+            format: Format::from_str(&value.format_name).unwrap(),
+            event_type: EventType::from_str(&value.tournament_type).unwrap(),
             player_cap: value.player_cap,
         }
     }
@@ -58,8 +59,8 @@ impl From<FabEvent> for TournamentEvent {
             start_time: start_time,
             address: value.address,
             description: value.description,
-            format: value.tournament_type,
-            event_type: value.format_name,
+            format: Format::from_str(&value.format_name).unwrap(),
+            event_type: EventType::from_str(&value.tournament_type).unwrap(),
             player_cap: value.player_cap,
         }
     }

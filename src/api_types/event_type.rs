@@ -1,32 +1,24 @@
+use std::str::FromStr;
+
 use chrono::Duration;
-use serde::Deserialize;
+use crate::Error;
+
 use super::Format;
 
-#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EventType {
-    #[serde(alias = "Armory Event")]
-    #[serde(alias = "armory event")]
     ArmoryEvent,
     Battlegrounds,
     Calling,
-    #[serde(alias = "Learn to Play Event")]
     LearnToPlay,
-    #[serde(alias = "National Championship")]
     NationalChampionship,
-    #[serde(alias = "On Demand")]
-    #[serde(alias = "on demand")]
     OnDemand,
-    #[serde(alias = "Pro Tour")]
     ProTour,
     Showdown,
-    #[serde(alias = "Social Play Event")]
+    Skirmish,
     SocialPlayEvent,
-    #[serde(alias = "World Championship Qualifier")]
     WorldChampionshipQualifier,
-    #[serde(alias = "World Premiere")]
     WorldPremiere,
-    #[serde(other)]
-    Unknown
 }
 
 impl AsRef<str> for EventType {
@@ -40,10 +32,32 @@ impl AsRef<str> for EventType {
             EventType::OnDemand => "On Demand",
             EventType::ProTour => "Pro Tour",
             EventType::Showdown => "Showdown",
+            EventType::Skirmish => "Skirmish Season 14",
             EventType::SocialPlayEvent => "Social Play Event",
             EventType::WorldChampionshipQualifier => "World Championship Qualifier",
             EventType::WorldPremiere => "World Premiere",
-            Self::Unknown => "?"
+        }
+    }
+}
+
+impl FromStr for EventType {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "armory event" => Ok(Self::ArmoryEvent),
+            "battlegrounds" => Ok(Self::Battlegrounds),
+            "calling" => Ok(Self::Calling),
+            "learn to play" => Ok(Self::LearnToPlay),
+            "national championship" => Ok(Self::NationalChampionship),
+            "on demand" => Ok(Self::OnDemand),
+            "pro tour" => Ok(Self::ProTour),
+            "showdown" => Ok(Self::Showdown),
+            "skirmish season 14" => Ok(Self::Skirmish),
+            "social play event" => Ok(Self::SocialPlayEvent),
+            "world championship qualifier" => Ok(Self::WorldChampionshipQualifier),
+            "world premiere" => Ok(Self::WorldPremiere),
+            x => Err(format!("unknown event type {x}").into())
         }
     }
 }
@@ -63,12 +77,12 @@ impl EventType {
             EventType::SocialPlayEvent => Some(if cap_based > 0 {cap_based} else {3}),
             EventType::Battlegrounds |
             EventType::Showdown |
+            EventType::Skirmish |
             EventType::NationalChampionship |
             EventType::WorldPremiere |
             EventType::WorldChampionshipQualifier => Some(if cap_based > 0 {cap_based} else {7}),
             EventType::Calling => Some(12),
             EventType::ProTour => Some(14),
-            EventType::Unknown => None
         }
     }
 
@@ -81,7 +95,7 @@ impl EventType {
                     .duration()
                     .checked_mul(6)
                     .zip(
-                        Format::ClassicConstructed("!".to_string())
+                        Format::ClassicConstructed
                         .duration()
                         .checked_mul(8))
                         .map(|(a, b)| a + b),

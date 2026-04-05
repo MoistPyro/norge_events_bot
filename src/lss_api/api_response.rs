@@ -66,3 +66,15 @@ impl ApiResponse {
         self.results.iter().map(|e| e.into()).collect()
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    ///this passes if it runs without error.
+    #[tokio::test]
+    async fn it_works() {
+
+        let temp = ApiResponse::get_from_city(&City::Oslo).await.expect("expected a well formed response");
+    }
+}

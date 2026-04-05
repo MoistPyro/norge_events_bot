@@ -9,7 +9,7 @@ use super::error_hander;
 #[poise::command(
     slash_command,
     prefix_command,
-    //on_error = "error_hander"
+    on_error = "error_hander"
 )]
 pub async fn events(ctx: Context<'_>, #[description = "city:"] city: City) -> Result<(), Error> {
 
