@@ -1,10 +1,11 @@
 use std::str::FromStr;
 
-
 use crate::{Error, api_types::country_city::{DenmarkCity, NorwayCity, SwedenCity}};
 
+pub trait City: Into<EveryCity> + AsRef<str> + poise::ChoiceParameter {}
+
 #[derive(Debug, poise::ChoiceParameter)]
-pub enum City {
+pub enum EveryCity {
     Oslo,
     Stavanger,
     Drammen,
@@ -16,23 +17,23 @@ pub enum City {
     Århus,
 }
 
-impl AsRef<str> for City {
+impl AsRef<str> for EveryCity {
     fn as_ref(&self) -> &str {
         match self {
-            City::Oslo => "Oslo, Norge",
-            City::Stavanger => "Stavanger, Norge",
-            City::Drammen => "Drammen, Norge",
-            City::Lillehammer => "Lillehammer, Norge",
-            City::Bodø => "Bodø, Norge",
-            City::Stockholm => "Stockholm, Sverige",
-            City::Göteborg => "Göteborg, Sverige",
-            City::København => "København, Danmark",
-            City::Århus => "Århus, Danmark",
+            EveryCity::Oslo => "Oslo, Norge",
+            EveryCity::Stavanger => "Stavanger, Norge",
+            EveryCity::Drammen => "Drammen, Norge",
+            EveryCity::Lillehammer => "Lillehammer, Norge",
+            EveryCity::Bodø => "Bodø, Norge",
+            EveryCity::Stockholm => "Stockholm, Sverige",
+            EveryCity::Göteborg => "Göteborg, Sverige",
+            EveryCity::København => "København, Danmark",
+            EveryCity::Århus => "Århus, Danmark",
         }
     }
 }
 
-impl FromStr for City {
+impl FromStr for EveryCity {
     type Err = Error;
     
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -51,32 +52,34 @@ impl FromStr for City {
     }
 }
 
-impl From<NorwayCity> for City {
+impl From<NorwayCity> for EveryCity {
     fn from(value: NorwayCity) -> Self {
         match value {
-            NorwayCity::Oslo => City::Oslo,
-            NorwayCity::Stavanger => City::Stavanger,
-            NorwayCity::Drammen => City::Drammen,
-            NorwayCity::Lillehammer => City::Lillehammer,
-            NorwayCity::Bodø => City::Bodø,
+            NorwayCity::Oslo => EveryCity::Oslo,
+            NorwayCity::Stavanger => EveryCity::Stavanger,
+            NorwayCity::Drammen => EveryCity::Drammen,
+            NorwayCity::Lillehammer => EveryCity::Lillehammer,
+            NorwayCity::Bodø => EveryCity::Bodø,
         }
     }
 }
 
-impl From<SwedenCity> for City {
+impl From<SwedenCity> for EveryCity {
     fn from(value: SwedenCity) -> Self {
         match value {
-            SwedenCity::Stockholm => City::Stockholm,
-            SwedenCity::Göteborg => City::Göteborg,
+            SwedenCity::Stockholm => EveryCity::Stockholm,
+            SwedenCity::Göteborg => EveryCity::Göteborg,
         }
     }
 }
 
-impl From<DenmarkCity> for City {
+impl From<DenmarkCity> for EveryCity {
     fn from(value: DenmarkCity) -> Self {
         match value {
-            DenmarkCity::København => City::København,
-            DenmarkCity::Århus => City::Århus,
+            DenmarkCity::København => EveryCity::København,
+            DenmarkCity::Århus => EveryCity::Århus,
         }
     }
 }
+
+impl City for EveryCity {}

@@ -1,6 +1,6 @@
 use tracing::info;
 
-use crate::api_types::{City, DenmarkCity, NorwayCity, SwedenCity};
+use crate::api_types::{EveryCity, City, DenmarkCity, NorwayCity, SwedenCity};
 use crate::Context;
 use crate::Error;
 use crate::lss_api::ApiResponse;
@@ -31,7 +31,7 @@ pub async fn post(_ctx: Context<'_>) -> Result<(), Error> {
 )]
 pub async fn nor_post(ctx: Context<'_>, #[description = "city:"] city: NorwayCity) -> Result<(), Error> {
     
-    generic_post(ctx, city.into()).await?;
+    generic_post(ctx, city).await?;
     Ok(())
 }
 
@@ -45,7 +45,7 @@ pub async fn nor_post(ctx: Context<'_>, #[description = "city:"] city: NorwayCit
 )]
 pub async fn swe_post(ctx: Context<'_>, #[description = "city:"] city: SwedenCity) -> Result<(), Error> {
     
-    generic_post(ctx, city.into()).await?;
+    generic_post(ctx, city).await?;
     Ok(())
 }
 
@@ -59,11 +59,11 @@ pub async fn swe_post(ctx: Context<'_>, #[description = "city:"] city: SwedenCit
 )]
 pub async fn den_post(ctx: Context<'_>, #[description = "city:"] city: DenmarkCity) -> Result<(), Error> {
     
-    generic_post(ctx, city.into()).await?;
+    generic_post(ctx, city).await?;
     Ok(())
 }
 
-async fn generic_post(ctx: Context<'_>, city: City) -> Result<(), Error> {
+async fn generic_post(ctx: Context<'_>, city: impl City) -> Result<(), Error> {
 
     let response: ApiResponse = ApiResponse::get_from_city(&city).await?;
     let fab_events: Vec<TournamentEvent> = response.get_tournaments();

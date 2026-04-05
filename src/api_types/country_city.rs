@@ -1,3 +1,5 @@
+use crate::api_types::city::City;
+
 #[derive(Debug, poise::ChoiceParameter)]
 pub enum NorwayCity {
     Oslo,
@@ -30,3 +32,25 @@ impl AsRef<str> for NorwayCity {
         }
     }
 }
+
+impl AsRef<str> for SwedenCity {
+    fn as_ref(&self) -> &str {
+        match self {
+            SwedenCity::Stockholm => "Stockholm, Sverige",
+            SwedenCity::Göteborg => "Göteborg, Sverige",
+        }
+    }
+}
+
+impl AsRef<str> for DenmarkCity {
+    fn as_ref(&self) -> &str {
+        match self {
+            DenmarkCity::København => "København, Danmark",
+            DenmarkCity::Århus => "Århus, Danmark",
+        }
+    }
+}
+
+impl City for NorwayCity {}
+impl City for SwedenCity {}
+impl City for DenmarkCity {}

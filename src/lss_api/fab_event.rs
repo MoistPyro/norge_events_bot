@@ -1,6 +1,6 @@
 use chrono::{DateTime, Duration, FixedOffset, Local};
 use serde::Deserialize;
-use crate::api_types::{Country, EventType, Format};
+use crate::api_types::Country;
 
 const KIWI_BULLSHIT_MOD: i64 = 10;
 
@@ -61,7 +61,7 @@ mod test {
       "description": "",
       "status": "PLANNED",
       "format_name": "Classic Constructed",
-      "country": "NO",
+      "country": "SE",
       "player_cap": null,
       "live_coverage": false,
       "lat": 59.9133941,
@@ -87,7 +87,7 @@ mod test {
         description: "".to_string(),
         status: "PLANNED".to_string(),
         format_name: "Classic Constructed".to_string(),
-        country: Country::NO,
+        country: Country::SE,
         player_cap: None,
         live_coverage: false,
         lat: (),

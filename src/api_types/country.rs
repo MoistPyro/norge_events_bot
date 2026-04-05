@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use super::City;
+use super::EveryCity;
 
 #[derive(Debug, Deserialize, poise::ChoiceParameter, PartialEq, Eq, Clone, Copy)]
 pub enum Country {
@@ -8,18 +8,18 @@ pub enum Country {
     DK,
 }
 
-impl From<City> for Country {
-    fn from(value: City) -> Self {
+impl From<EveryCity> for Country {
+    fn from(value: EveryCity) -> Self {
         match value {
-            City::Oslo |
-            City::Stavanger |
-            City::Drammen |
-            City::Lillehammer |
-            City::Bodø => Self::NO,
-            City::Stockholm |
-            City::Göteborg => Self::SE,
-            City::København |
-            City::Århus => Self::DK,
+            EveryCity::Oslo |
+            EveryCity::Stavanger |
+            EveryCity::Drammen |
+            EveryCity::Lillehammer |
+            EveryCity::Bodø => Self::NO,
+            EveryCity::Stockholm |
+            EveryCity::Göteborg => Self::SE,
+            EveryCity::København |
+            EveryCity::Århus => Self::DK,
         }
     }
 }

@@ -19,7 +19,7 @@ pub struct ApiResponse {
 
 impl ApiResponse {
 
-    pub async fn get_from_city(city: &City) -> Result<Self, Error> {
+    pub async fn get_from_city(city: &impl City) -> Result<Self, Error> {
 
         let mut page = 1;
         let query = [("search", city.as_ref()), ("page", &format!("{page}"))];
@@ -70,11 +70,19 @@ impl ApiResponse {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::api_types::EveryCity;
 
     ///this passes if it runs without error.
     #[tokio::test]
-    async fn it_works() {
+    async fn test_get() {
 
-        let temp = ApiResponse::get_from_city(&City::Oslo).await.expect("expected a well formed response");
+        let _ = ApiResponse::get_from_city(&EveryCity::Oslo).await.expect("expected a well formed response");
+        
+        assert!(true)
+    }
+
+    #[tokio::test]
+    async fn test_get_tournaments() {
+        todo!()
     }
 }

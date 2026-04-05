@@ -1,4 +1,4 @@
-pub use city::City;
+pub use city::{EveryCity, City};
 pub use country_city::{DenmarkCity, NorwayCity, SwedenCity};
 pub use country::Country;
 pub use event_type::EventType;
