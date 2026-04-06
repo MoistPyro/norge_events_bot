@@ -7,6 +7,8 @@ use tracing::info;
 use crate::lss_api::FabEvent;
 use crate::structs::{EventType, Format};
 
+const MAX_MESSAGE_LENGTH: usize = 2000;
+
 #[derive(Debug)]
 pub struct TournamentEvent {
     pub organiser_name: String,
@@ -123,8 +125,7 @@ impl TournamentEvent {
         let org_name: &str = &self.organiser_name;
         let start_time = self.start_time_as_str();
 
-        //format!("| {:<32} | {:<20} | {:18}| {} {}", nick, org_name, start_time, self.format.as_ref(), self.event_type.as_ref())
-        format!("{:<40}\ntype: {:<34}\nformat: {:<32}\n{:<20}  {:18}", nick, self.event_type.as_ref(), self.format.as_ref(), org_name, start_time)
+        format!("{:<40}\ntype: {:<34}\nformat: {:<32}\n{:<20}  {:18}\n", nick, self.event_type.as_ref(), self.format.as_ref(), org_name, start_time)
     }
 
     ///returns the approximate duration of the event, or two hours.
@@ -154,15 +155,24 @@ impl TournamentEvent {
 
 pub fn format_fab_events(events: Vec<TournamentEvent>) -> CreateReply {
 
-    //let mut event_list_lines = vec!["```".to_string(), format!("| Events                               | location             | start time        |"), ["="; 80].join("")];
-    let mut event_list_lines = vec!["```".to_string(), ["="; 40].join("")];
+    let mut event_list_lines = vec!["```".to_string()];
 
-    let mut formated_events: Vec<String> = events
-        .iter()
-        .map(|event| event.format_event())
-        .collect();
+    let mut total_characters = 3;
+    let num_events = events.len();
 
-    event_list_lines.append(&mut formated_events);
+    for (i, event) in events.iter().enumerate() {
+        let text = event.format_event();
+        let text_len = text.len();
+
+        if text_len + total_characters <= MAX_MESSAGE_LENGTH - 22 {
+            event_list_lines.push(text);
+            total_characters += text_len + 1;
+        } else {
+            event_list_lines.push(format!("{:>3} events hidden.", num_events - i));
+            break;
+        }
+    }
+
     event_list_lines.push("```".to_string());
 
     let content = event_list_lines.join("\n");
