@@ -2,7 +2,7 @@ use poise::CreateReply;
 
 use crate::{Context, Error, tournament_event};
 use crate::lss_api::ApiResponse;
-use crate::api_types::EveryCity;
+use crate::structs::EveryCity;
 use super::error_hander;
 
 /// Get a list of Flesh and Blood events in the choosen city.

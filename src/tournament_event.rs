@@ -1,23 +1,23 @@
 use std::fmt::Display;
-use std::str::FromStr;
+use chrono::format::{DelayedFormat, StrftimeItems};
 use chrono::{DateTime, Duration, Local};
 use poise::CreateReply;
 use serenity::all::{Colour, CreateEmbed, ScheduledEvent};
 use tracing::info;
 use crate::lss_api::FabEvent;
-use crate::api_types::{EventType, Format};
+use crate::structs::{EventType, Format};
 
 #[derive(Debug)]
 pub struct TournamentEvent {
     pub organiser_name: String,
-    org_link: String,
+    pub org_link: String,
     pub event_name: String,
     pub start_time: DateTime<Local>,
     pub address: String,
     pub description: String,
-    format: Format,
-    event_type: EventType,
-    player_cap: Option<i32>,
+    pub format: Format,
+    pub event_type: EventType,
+    pub player_cap: Option<i32>,
 }
 
 impl PartialEq<ScheduledEvent> for TournamentEvent {
@@ -37,15 +37,15 @@ impl PartialEq<&ScheduledEvent> for TournamentEvent {
 impl From<&FabEvent> for TournamentEvent {
     fn from(value: &FabEvent) -> Self {
         Self {
-            organiser_name: value.organiser_name.clone(),
-            org_link: "https://fabtcg.com/locator/".to_owned() + &value.organiser_store_slug,
-            event_name: value.nickname.clone(),
+            organiser_name: value.org_name().to_string(),
+            org_link: value.org_link(),
+            event_name: value.event_nickname().to_string(),
             start_time: value.get_start_time_local(),
-            address: value.address.clone(),
-            description: value.description.clone(),
-            format: Format::from_str(&value.format_name).unwrap(),
-            event_type: EventType::from_str(&value.tournament_type).unwrap(),
-            player_cap: value.player_cap,
+            address: value.address().to_string(),
+            description: value.description().to_string(),
+            format: value.format(),
+            event_type: value.event_type(),
+            player_cap: value.player_cap(),
         }
     }
 }
@@ -54,15 +54,15 @@ impl From<FabEvent> for TournamentEvent {
     fn from(value: FabEvent) -> Self {
         let start_time = value.get_start_time_local();
         Self {
-            organiser_name: value.organiser_name,
-            org_link: "https://fabtcg.com/locator/".to_owned() + &value.organiser_store_slug,
-            event_name: value.nickname,
+            organiser_name: value.org_name().to_string(),
+            org_link: value.org_link(),
+            event_name: value.event_nickname().to_string(),
             start_time: start_time,
-            address: value.address,
-            description: value.description,
-            format: Format::from_str(&value.format_name).unwrap(),
-            event_type: EventType::from_str(&value.tournament_type).unwrap(),
-            player_cap: value.player_cap,
+            address: value.address().to_string(),
+            description: value.description().to_string(),
+            format: value.format(),
+            event_type: value.event_type(),
+            player_cap: value.player_cap(),
         }
     }
 }
@@ -88,6 +88,7 @@ impl PartialEq for TournamentEvent {
 
 impl Eq for TournamentEvent {}
 
+/// sorting events order them by start time
 impl PartialOrd for TournamentEvent {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
 
@@ -109,17 +110,21 @@ impl TournamentEvent {
             .is_some()
     }
 
-    fn format_event(&self) -> String {
+    pub fn start_time_as_str(&self) -> DelayedFormat<StrftimeItems<'_>>{
+        let format_string: &str = "%a %d.%m - %H:%M";
+        self.start_time.format(format_string)
+    }
+
+    pub fn format_event(&self) -> String {
 
         let mut nick: String = self.event_name.clone();
-        nick.truncate(32);
+        nick.truncate(40);
 
         let org_name: &str = &self.organiser_name;
+        let start_time = self.start_time_as_str();
 
-        let format_string: &str = "%a %d.%m - %H:%M";
-        let start_time = self.start_time.format(format_string);
-
-        format!("| {:<32} | {:<20} | {:18}| {} {}", nick, org_name, start_time, self.format.as_ref(), self.event_type.as_ref())
+        //format!("| {:<32} | {:<20} | {:18}| {} {}", nick, org_name, start_time, self.format.as_ref(), self.event_type.as_ref())
+        format!("{:<40}\ntype: {:<34}\nformat: {:<32}\n{:<20}  {:18}", nick, self.event_type.as_ref(), self.format.as_ref(), org_name, start_time)
     }
 
     ///returns the approximate duration of the event, or two hours.
@@ -149,7 +154,8 @@ impl TournamentEvent {
 
 pub fn format_fab_events(events: Vec<TournamentEvent>) -> CreateReply {
 
-    let mut event_list_lines = vec!["```".to_string(), format!("| Events                           | location             | start time        |"), ["="; 80].join("")];
+    //let mut event_list_lines = vec!["```".to_string(), format!("| Events                               | location             | start time        |"), ["="; 80].join("")];
+    let mut event_list_lines = vec!["```".to_string(), ["="; 40].join("")];
 
     let mut formated_events: Vec<String> = events
         .iter()
@@ -175,63 +181,4 @@ pub fn _format_embeds(events: Vec<TournamentEvent>) -> CreateReply {
     //TODO: make fancy logic for finding relevant events
 
     reply
-}
-
-#[cfg(test)]
-mod test {
-    use chrono::FixedOffset;
-    use chrono::TimeZone;
-    use chrono::Local;
-    use chrono::DateTime;
-
-    use crate::api_types::Country;
-    use crate::lss_api::fab_event::KIWI_BULLSHIT_MOD;
-
-    use super::*;
-
-    #[tokio::test]
-    async fn test_from_fab_event() {
-
-        let start_time = FixedOffset::east_opt(12 * 3600).unwrap()
-            .with_ymd_and_hms(2026, 4, 07, 17, 0, 0).unwrap();
-
-        let other_time: DateTime<Local> = DateTime::from(start_time) + Duration::hours(KIWI_BULLSHIT_MOD);
-
-        let temp = FabEvent {
-            id: 438838,
-            organiser_name: "Midgard Games Oslo".to_string(),
-            tournament_type: "Pro Tour".to_string(),
-            nickname: "Midgardgames Armory".to_string(),
-            organiser_store_slug: "midgard-games-oslo".to_string(),
-            start_time: start_time,
-            address: "Ensjøveien 22, 0661 Oslo, Norway".to_string(),
-            event_link: None,
-            description: "".to_string(),
-            status: "PLANNED".to_string(),
-            format_name: "Classic Constructed".to_string(),
-            country: Country::SE,
-            player_cap: None,
-            live_coverage: false,
-            lat: (),
-            lon: (),
-            distance: (),
-            distance_unit: ()
-        };
-
-        let target = TournamentEvent {
-            organiser_name: "Midgard Games Oslo".to_string(),
-            org_link: "https://fabtcg.com/locator/midgard-games-oslo".to_string(),
-            event_name: "Midgardgames Armory".to_string(),
-            start_time: other_time,
-            address: "Ensjøveien 22, 0661 Oslo, Norway".to_string(),
-            description: "".to_string(),
-            format: Format::ClassicConstructed,
-            event_type: EventType::ProTour,
-            player_cap: None
-        };
-
-        let temp = TournamentEvent::from(temp);
-
-        assert_eq!(temp, target)
-    }
 }

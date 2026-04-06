@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 use chrono::Duration;
 use serde::Deserialize;
@@ -34,6 +34,12 @@ impl AsRef<str> for Format {
             Format::CrackShufflePlay => "Crack, Shuffle, Play!",
             Format::Sage => "Silver Age",
         }
+    }
+}
+
+impl Display for Format {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_ref())
     }
 }
 

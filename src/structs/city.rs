@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
-use crate::{Error, api_types::country_city::{DenmarkCity, NorwayCity, SwedenCity}};
+use crate::structs::country_city::{DenmarkCity, NorwayCity, SwedenCity};
+use crate::Error;
 
 pub trait City: Into<EveryCity> + AsRef<str> + poise::ChoiceParameter {}
 

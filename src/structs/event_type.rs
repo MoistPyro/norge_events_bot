@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 use chrono::Duration;
 use crate::Error;
@@ -39,6 +39,12 @@ impl AsRef<str> for EventType {
             EventType::WorldChampionshipQualifier => "World Championship Qualifier",
             EventType::WorldPremiere => "World Premiere",
         }
+    }
+}
+
+impl Display for EventType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_ref())
     }
 }
 

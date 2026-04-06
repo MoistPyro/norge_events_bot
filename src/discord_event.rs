@@ -3,7 +3,7 @@ use serenity::model::guild::{ScheduledEvent, ScheduledEventType};
 use serenity::model::id::GuildId;
 use serenity::builder::CreateScheduledEvent;
 use tokio_stream::StreamExt;
-use tracing::{error, info, debug, warn};
+use tracing::{error, info, warn};
 
 use crate::Error;
 use crate::Context;
@@ -40,14 +40,12 @@ pub async fn schedule_events(ctx: Context<'_>, fab_events: &Vec<TournamentEvent>
     // active_events.iter().for_each(|e| info!("{}", e.name));
 
     let mut event_stream = tokio_stream::iter(fab_events);
-    info!("made a stream");
     
     let mut i = 0;
     while let Some(fab_event) = event_stream.next().await {
-        info!("got to the loop");
 
         if fab_event.is_already_imported(&active_events) {
-            info!("skipping {}; already scheduled", fab_event);
+            warn!("skipping {}; already scheduled", fab_event);
             continue;
         } else {
             info!("importing {}", fab_event);

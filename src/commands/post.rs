@@ -1,6 +1,6 @@
 use tracing::info;
 
-use crate::api_types::{City, DenmarkCity, NorwayCity, SwedenCity};
+use crate::structs::{City, DenmarkCity, NorwayCity, SwedenCity};
 use crate::Context;
 use crate::Error;
 use crate::lss_api::ApiResponse;

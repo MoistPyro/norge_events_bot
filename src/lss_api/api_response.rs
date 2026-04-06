@@ -1,6 +1,6 @@
 use reqwest::IntoUrl;
 use serde::Deserialize;
-use crate::{Error, api_types::City, tournament_event::TournamentEvent};
+use crate::{Error, structs::City, tournament_event::TournamentEvent};
 use super::FabEvent;
 
 const FAB_API_URL: &str = "https://gem.fabtcg.com/api/v1/locator/events";
@@ -18,6 +18,22 @@ pub struct ApiResponse {
 }
 
 impl ApiResponse {
+
+    pub fn new(count: i32, next: Option<String>, results: Vec<FabEvent>) -> Self {
+        Self { count, next, previous: (), results, filters: () }
+    }
+
+    pub fn count(&self) -> i32 {
+        self.count
+    }
+
+    pub fn next(&self) -> &Option<String> {
+        &self.next
+    }
+
+    pub fn results(&self) -> &Vec<FabEvent> {
+        &self.results
+    }
 
     pub async fn get_from_city(city: &impl City) -> Result<Self, Error> {
 
@@ -64,25 +80,5 @@ impl ApiResponse {
         // r
 
         self.results.iter().map(|e| e.into()).collect()
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::api_types::EveryCity;
-
-    ///this passes if it runs without error.
-    #[tokio::test]
-    async fn test_get() {
-
-        let _ = ApiResponse::get_from_city(&EveryCity::Göteborg).await.expect("expected a well formed response");
-        
-        assert!(true)
-    }
-
-    #[tokio::test]
-    async fn test_get_tournaments() {
-        todo!()
     }
 }

@@ -1,4 +1,4 @@
-use crate::api_types::city::City;
+use crate::structs::city::City;
 
 #[derive(Debug, poise::ChoiceParameter)]
 pub enum NorwayCity {
