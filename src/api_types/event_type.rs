@@ -12,6 +12,7 @@ pub enum EventType {
     Calling,
     LearnToPlay,
     NationalChampionship,
+    PreRelease,
     OnDemand,
     ProTour,
     Showdown,
@@ -29,6 +30,7 @@ impl AsRef<str> for EventType {
             EventType::Calling => "Calling",
             EventType::LearnToPlay => "Learn to Play Event",
             EventType::NationalChampionship => "National Championship",
+            EventType::PreRelease => "Omens of the Third Age Pre-Release",
             EventType::OnDemand => "On Demand",
             EventType::ProTour => "Pro Tour",
             EventType::Showdown => "Showdown",
@@ -50,6 +52,7 @@ impl FromStr for EventType {
             "calling" => Ok(Self::Calling),
             "learn to play" => Ok(Self::LearnToPlay),
             "national championship" => Ok(Self::NationalChampionship),
+            "omens of the third age pre-release" => Ok(Self::PreRelease),
             "on demand" => Ok(Self::OnDemand),
             "pro tour" => Ok(Self::ProTour),
             "showdown" => Ok(Self::Showdown),
@@ -75,6 +78,7 @@ impl EventType {
             EventType::LearnToPlay |
             EventType::OnDemand |
             EventType::SocialPlayEvent => Some(if cap_based > 0 {cap_based} else {3}),
+            Self::PreRelease => Some(if cap_based > 0 {cap_based} else {4}),
             EventType::Battlegrounds |
             EventType::Showdown |
             EventType::Skirmish |

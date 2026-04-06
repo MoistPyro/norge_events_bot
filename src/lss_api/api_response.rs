@@ -22,14 +22,14 @@ impl ApiResponse {
     pub async fn get_from_city(city: &impl City) -> Result<Self, Error> {
 
         let mut page = 1;
-        let query = [("search", city.as_ref()), ("page", &format!("{page}"))];
+        let query = [("search", city.as_ref()), ("mode", "event"), ("page", &format!("{page}"))];
         let mut response: ApiResponse = Self::get_url(FAB_API_URL, &query).await?;
         
         page += 1;
 
         while let Some(_) = response.next {
             
-            let query = [("search", city.as_ref()), ("page", &format!("{page}"))];
+            let query = [("search", city.as_ref()), ("mode", "event"), ("page", &format!("{page}"))];
             let next: ApiResponse = Self::get_url(FAB_API_URL, &query).await?;
             response.flatten_next(next);
 
@@ -76,7 +76,7 @@ mod test {
     #[tokio::test]
     async fn test_get() {
 
-        let _ = ApiResponse::get_from_city(&EveryCity::Oslo).await.expect("expected a well formed response");
+        let _ = ApiResponse::get_from_city(&EveryCity::Göteborg).await.expect("expected a well formed response");
         
         assert!(true)
     }

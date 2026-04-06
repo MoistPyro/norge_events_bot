@@ -2,33 +2,33 @@ use chrono::{DateTime, Duration, FixedOffset, Local};
 use serde::Deserialize;
 use crate::api_types::Country;
 
-const KIWI_BULLSHIT_MOD: i64 = 10;
+pub const KIWI_BULLSHIT_MOD: i64 = 10;
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[allow(dead_code)]
 pub struct FabEvent {
-    id: i32,
+    pub(crate) id: i32,
     pub organiser_name: String,
     pub tournament_type: String,
     pub nickname: String,
     pub organiser_store_slug: String,
     pub start_time: DateTime<FixedOffset>,
     pub address: String,
-    event_link: Option<String>,
+    pub(crate) event_link: Option<String>,
     pub description: String,
-    status: String,
+    pub(crate) status: String,
     pub format_name: String,
-    country: Country,
+    pub(crate) country: Country,
     pub player_cap: Option<i32>,
-    live_coverage: bool,
+    pub(crate) live_coverage: bool,
     #[serde(skip)]
-    lat: (),
+    pub(crate) lat: (),
     #[serde(skip)]
-    lon: (),
+    pub(crate) lon: (),
     #[serde(skip)]
-    distance: (),
+    pub(crate) distance: (),
     #[serde(skip)]
-    distance_unit: (),
+    pub(crate) distance_unit: (),
 }
 
 impl FabEvent {
@@ -52,7 +52,7 @@ mod test {
         let mock = r#"{
       "id": 438838,
       "organiser_name": "Midgard Games Oslo",
-      "tournament_type": "Armory Event",
+      "tournament_type": "Pro Tour",
       "nickname": "Midgardgames Armory",
       "organiser_store_slug": "midgard-games-oslo",
       "start_time": "2026-04-07T17:00:00+12:00",
@@ -78,7 +78,7 @@ mod test {
     let target = FabEvent{
         id: 438838,
         organiser_name: "Midgard Games Oslo".to_string(),
-        tournament_type: "Armory Event".to_string(),
+        tournament_type: "Pro Tour".to_string(),
         nickname: "Midgardgames Armory".to_string(),
         organiser_store_slug: "midgard-games-oslo".to_string(),
         start_time: start_time,

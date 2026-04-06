@@ -7,6 +7,7 @@ use tracing::info;
 use crate::lss_api::FabEvent;
 use crate::api_types::{EventType, Format};
 
+#[derive(Debug)]
 pub struct TournamentEvent {
     pub organiser_name: String,
     org_link: String,
@@ -126,7 +127,7 @@ impl TournamentEvent {
         self.event_type.duration(&self.format, self.player_cap).unwrap_or(Duration::hours(2))
     }
 
-    pub fn make_embed(&self) -> CreateEmbed {
+    pub fn _make_embed(&self) -> CreateEmbed {
 
         let format_string: &str = "%a %d.%m - %H:%M";
         let start_time = self.start_time.format(format_string);
@@ -162,16 +163,75 @@ pub fn format_fab_events(events: Vec<TournamentEvent>) -> CreateReply {
     CreateReply::default().content(content)
 }
 
-pub fn format_embeds(events: Vec<TournamentEvent>) -> CreateReply {
+pub fn _format_embeds(events: Vec<TournamentEvent>) -> CreateReply {
 
     let mut reply = CreateReply::default();
 
     for event in events.iter().take(10) {
         info!("an embed");
-        reply = reply.embed(event.make_embed());
+        reply = reply.embed(event._make_embed());
     }
 
     //TODO: make fancy logic for finding relevant events
 
     reply
+}
+
+#[cfg(test)]
+mod test {
+    use chrono::FixedOffset;
+    use chrono::TimeZone;
+    use chrono::Local;
+    use chrono::DateTime;
+
+    use crate::api_types::Country;
+    use crate::lss_api::fab_event::KIWI_BULLSHIT_MOD;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn test_from_fab_event() {
+
+        let start_time = FixedOffset::east_opt(12 * 3600).unwrap()
+            .with_ymd_and_hms(2026, 4, 07, 17, 0, 0).unwrap();
+
+        let other_time: DateTime<Local> = DateTime::from(start_time) + Duration::hours(KIWI_BULLSHIT_MOD);
+
+        let temp = FabEvent {
+            id: 438838,
+            organiser_name: "Midgard Games Oslo".to_string(),
+            tournament_type: "Pro Tour".to_string(),
+            nickname: "Midgardgames Armory".to_string(),
+            organiser_store_slug: "midgard-games-oslo".to_string(),
+            start_time: start_time,
+            address: "Ensjøveien 22, 0661 Oslo, Norway".to_string(),
+            event_link: None,
+            description: "".to_string(),
+            status: "PLANNED".to_string(),
+            format_name: "Classic Constructed".to_string(),
+            country: Country::SE,
+            player_cap: None,
+            live_coverage: false,
+            lat: (),
+            lon: (),
+            distance: (),
+            distance_unit: ()
+        };
+
+        let target = TournamentEvent {
+            organiser_name: "Midgard Games Oslo".to_string(),
+            org_link: "https://fabtcg.com/locator/midgard-games-oslo".to_string(),
+            event_name: "Midgardgames Armory".to_string(),
+            start_time: other_time,
+            address: "Ensjøveien 22, 0661 Oslo, Norway".to_string(),
+            description: "".to_string(),
+            format: Format::ClassicConstructed,
+            event_type: EventType::ProTour,
+            player_cap: None
+        };
+
+        let temp = TournamentEvent::from(temp);
+
+        assert_eq!(temp, target)
+    }
 }

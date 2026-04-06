@@ -37,12 +37,14 @@ pub async fn schedule_events(ctx: Context<'_>, fab_events: &Vec<TournamentEvent>
     let guild_id: GuildId = ctx.guild_id().ok_or("called outside guild.")?;
     let active_events = guild_id.scheduled_events(ctx, false).await?;
 
-    active_events.iter().for_each(|e| debug!("{}", e.name));
+    // active_events.iter().for_each(|e| info!("{}", e.name));
 
     let mut event_stream = tokio_stream::iter(fab_events);
+    info!("made a stream");
     
     let mut i = 0;
     while let Some(fab_event) = event_stream.next().await {
+        info!("got to the loop");
 
         if fab_event.is_already_imported(&active_events) {
             info!("skipping {}; already scheduled", fab_event);
