@@ -17,6 +17,7 @@ pub struct ApiResponse {
     filters: (),
 }
 
+#[allow(unused)]
 impl ApiResponse {
 
     pub fn new(count: i32, next: Option<String>, results: Vec<FabEvent>) -> Self {
