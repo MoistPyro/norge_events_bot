@@ -1,57 +1,49 @@
-use chrono::{DateTime, Local};
-use serenity::model::guild::{ScheduledEvent, ScheduledEventType};
+use serenity::model::guild::ScheduledEvent;
 use serenity::model::id::GuildId;
 use serenity::builder::CreateScheduledEvent;
 use tokio_stream::StreamExt;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 use crate::Error;
 use crate::Context;
 use crate::tournament_event::TournamentEvent;
 
-async fn create_event(ctx: Context<'_>, fab_event: &TournamentEvent) -> Result<ScheduledEvent, Error> {
-
-    let name: &str = &fab_event.event_name;
-    let start_time: DateTime<Local> = fab_event.start_time;
-    let end_time: DateTime<Local> = fab_event.start_time + fab_event.calculate_duration();
-    let now: DateTime<Local> = Local::now();
-
-    if start_time < now || end_time < now {
-        warn!("{} is in the past. skipping event", start_time);
-        return Err("time is in the past".into());
-    }
-
-    let discord_event = CreateScheduledEvent::new(ScheduledEventType::External, name, start_time)
-        .end_time(end_time)
-        .location(&fab_event.address)
-        .description(&fab_event.description);
-
+pub async fn post_event(ctx: Context<'_>, builder: CreateScheduledEvent<'_>) -> Result<ScheduledEvent, Error> {
+    
     let guild_id: GuildId = ctx.guild_id().ok_or("called outside guild.")?;
-
-    let ready_event: ScheduledEvent = guild_id.create_scheduled_event(ctx, discord_event).await?;
+    let ready_event: ScheduledEvent = guild_id.create_scheduled_event(ctx, builder).await?;
     Ok(ready_event)
 }
 
+fn should_skip(event: &TournamentEvent, active_events: &Vec<ScheduledEvent>) -> bool {
+    if event.is_already_imported(active_events) {
+            warn!("skipping {}; already scheduled", event);
+            false
+        } else if event.is_past() {
+            warn!("skipping {}; event is in the past.", event);
+            false
+        } else {
+            info!("importing {}", event);
+            true
+        }
+}
+
+///returns the number of events scheduled
 pub async fn schedule_events(ctx: Context<'_>, fab_events: &Vec<TournamentEvent>) -> Result<usize, Error> {
 
     let guild_id: GuildId = ctx.guild_id().ok_or("called outside guild.")?;
     let active_events = guild_id.scheduled_events(ctx, false).await?;
 
-    // active_events.iter().for_each(|e| info!("{}", e.name));
+    debug!("{:?}", active_events);
 
     let mut event_stream = tokio_stream::iter(fab_events);
     
     let mut i = 0;
     while let Some(fab_event) = event_stream.next().await {
 
-        if fab_event.is_already_imported(&active_events) {
-            warn!("skipping {}; already scheduled", fab_event);
-            continue;
-        } else {
-            info!("importing {}", fab_event);
-        }
+        if should_skip(fab_event, &active_events) { continue; }
 
-        if let Err(schedule_error) = create_event(ctx, fab_event).await {
+        if let Err(schedule_error) = post_event(ctx, fab_event.into()).await {
             error!(schedule_error);
             continue;
         }

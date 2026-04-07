@@ -2,7 +2,7 @@ use std::fmt::Display;
 use chrono::format::{DelayedFormat, StrftimeItems};
 use chrono::{DateTime, Duration, Local};
 use poise::CreateReply;
-use serenity::all::{Colour, CreateEmbed, ScheduledEvent};
+use serenity::all::{Colour, CreateEmbed, CreateScheduledEvent, ScheduledEvent, ScheduledEventType};
 use tracing::info;
 use crate::lss_api::FabEvent;
 use crate::structs::{EventType, Format};
@@ -20,6 +20,20 @@ pub struct TournamentEvent {
     pub format: Format,
     pub event_type: EventType,
     pub player_cap: Option<i32>,
+}
+
+impl<'a> From<&TournamentEvent> for CreateScheduledEvent<'a> {
+    fn from(value: &TournamentEvent) -> Self {
+        
+        let name: &str = &value.event_name;
+        let start_time: DateTime<Local> = value.start_time;
+        let end_time: DateTime<Local> = value.start_time + value.calculate_duration();
+
+    CreateScheduledEvent::new(ScheduledEventType::External, name, start_time)
+        .end_time(end_time)
+        .location(&value.address)
+        .description(&value.description)
+    }
 }
 
 impl PartialEq<ScheduledEvent> for TournamentEvent {
@@ -110,6 +124,11 @@ impl TournamentEvent {
         active_events.iter()
             .find(|e| self.eq(e))
             .is_some()
+    }
+
+    pub fn is_past(&self) -> bool {
+
+        self.start_time < Local::now()
     }
 
     pub fn start_time_as_str(&self) -> DelayedFormat<StrftimeItems<'_>>{
