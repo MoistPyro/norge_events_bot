@@ -2,8 +2,7 @@ use std::fmt::Display;
 use chrono::format::{DelayedFormat, StrftimeItems};
 use chrono::{DateTime, Duration, Local};
 use poise::CreateReply;
-use serenity::all::{Colour, CreateEmbed, CreateScheduledEvent, ScheduledEvent, ScheduledEventType};
-use tracing::info;
+use serenity::all::{CreateScheduledEvent, ScheduledEvent, ScheduledEventType};
 use crate::lss_api::FabEvent;
 use crate::structs::{EventType, Format};
 
@@ -151,25 +150,6 @@ impl TournamentEvent {
     pub fn calculate_duration(&self) -> Duration {
         self.event_type.duration(&self.format, self.player_cap).unwrap_or(Duration::hours(2))
     }
-
-    pub fn _make_embed(&self) -> CreateEmbed {
-
-        let format_string: &str = "%a %d.%m - %H:%M";
-        let start_time = self.start_time.format(format_string);
-
-        let fields: Vec<(&str, String, bool)> = vec![
-            ("start time:", format!("{}", start_time), true),
-            ("address:", self.address.clone(), false),
-            ("format:", self.format.as_ref().to_owned(), true),
-            ("event type:", self.event_type.as_ref().to_owned(), false),
-        ];
-
-        CreateEmbed::new()
-            .colour(Colour::DARK_MAGENTA)
-            .title(format!("{self}"))
-            .url(&self.org_link)
-            .fields(fields)
-    }
 }
 
 pub fn format_fab_events(events: Vec<TournamentEvent>) -> CreateReply {
@@ -196,18 +176,4 @@ pub fn format_fab_events(events: Vec<TournamentEvent>) -> CreateReply {
 
     let content = event_list_lines.join("\n");
     CreateReply::default().content(content)
-}
-
-pub fn _format_embeds(events: Vec<TournamentEvent>) -> CreateReply {
-
-    let mut reply = CreateReply::default();
-
-    for event in events.iter().take(10) {
-        info!("an embed");
-        reply = reply.embed(event._make_embed());
-    }
-
-    //TODO: make fancy logic for finding relevant events
-
-    reply
 }
