@@ -1,86 +1,96 @@
 use std::str::FromStr;
 
-use crate::structs::country_city::{DenmarkCity, NorwayCity, SwedenCity};
 use crate::Error;
 
-pub trait City: Into<EveryCity> + AsRef<str> + poise::ChoiceParameter {}
+pub trait City: FromStr + AsRef<str> + poise::ChoiceParameter {}
 
 #[derive(Debug, poise::ChoiceParameter)]
-pub enum EveryCity {
+pub enum NorwayCity {
     Oslo,
     Stavanger,
-    Drammen,
     Lillehammer,
     Bodø,
+}
+
+#[derive(Debug, poise::ChoiceParameter)]
+pub enum SwedenCity {
     Stockholm,
     Göteborg,
+}
+
+#[derive(Debug, poise::ChoiceParameter)]
+pub enum DenmarkCity {
     København,
     Århus,
 }
 
-impl AsRef<str> for EveryCity {
-    fn as_ref(&self) -> &str {
-        match self {
-            EveryCity::Oslo => "Oslo, Norge",
-            EveryCity::Stavanger => "Stavanger, Norge",
-            EveryCity::Drammen => "Drammen, Norge",
-            EveryCity::Lillehammer => "Lillehammer, Norge",
-            EveryCity::Bodø => "Bodø, Norge",
-            EveryCity::Stockholm => "Stockholm, Sverige",
-            EveryCity::Göteborg => "Göteborg, Sverige",
-            EveryCity::København => "København, Danmark",
-            EveryCity::Århus => "Århus, Danmark",
-        }
-    }
-}
-
-impl FromStr for EveryCity {
+impl FromStr for NorwayCity {
     type Err = Error;
-    
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.trim() {
             "Oslo" | "oslo" => Ok(Self::Oslo),
             "Stavanger" | "stavanger" => Ok(Self::Stavanger),
-            "Drammen" | "drammen" => Ok(Self::Drammen),
             "Lillehammer" | "lillehammer" => Ok(Self::Lillehammer),
             "Bodø" | "bodø" => Ok(Self::Bodø),
+            x => Err(x.into())
+        }
+    }
+}
+
+impl FromStr for SwedenCity {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
             "Stockholm" | "stockholm" => Ok(Self::Stockholm),
             "Göteborg" | "götebrog" => Ok(Self::Göteborg),
-            "København" | "kjøbenhavn" => Ok(Self::København),
+            x => Err(x.into())
+        }
+    }
+}
+
+impl FromStr for DenmarkCity {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.trim() {
+            "København" | "københavn" => Ok(Self::København),
             "Århus" | "århus" => Ok(Self::Århus),
             x => Err(x.into())
         }
     }
 }
 
-impl From<NorwayCity> for EveryCity {
-    fn from(value: NorwayCity) -> Self {
-        match value {
-            NorwayCity::Oslo => EveryCity::Oslo,
-            NorwayCity::Stavanger => EveryCity::Stavanger,
-            NorwayCity::Drammen => EveryCity::Drammen,
-            NorwayCity::Lillehammer => EveryCity::Lillehammer,
-            NorwayCity::Bodø => EveryCity::Bodø,
+impl AsRef<str> for NorwayCity {
+    fn as_ref(&self) -> &str {
+        match self {
+            NorwayCity::Oslo => "Oslo, Norge",
+            NorwayCity::Stavanger => "Stavanger, Norge",
+            NorwayCity::Lillehammer => "Lillehammer, Norge",
+            NorwayCity::Bodø => "Bodø, Norge",
         }
     }
 }
 
-impl From<SwedenCity> for EveryCity {
-    fn from(value: SwedenCity) -> Self {
-        match value {
-            SwedenCity::Stockholm => EveryCity::Stockholm,
-            SwedenCity::Göteborg => EveryCity::Göteborg,
+impl AsRef<str> for SwedenCity {
+    fn as_ref(&self) -> &str {
+        match self {
+            SwedenCity::Stockholm => "Stockholm, Sverige",
+            SwedenCity::Göteborg => "Göteborg, Sverige",
         }
     }
 }
 
-impl From<DenmarkCity> for EveryCity {
-    fn from(value: DenmarkCity) -> Self {
-        match value {
-            DenmarkCity::København => EveryCity::København,
-            DenmarkCity::Århus => EveryCity::Århus,
+impl AsRef<str> for DenmarkCity {
+    fn as_ref(&self) -> &str {
+        match self {
+            DenmarkCity::København => "København, Danmark",
+            DenmarkCity::Århus => "Århus, Danmark",
         }
     }
 }
 
-impl City for EveryCity {}
+impl City for NorwayCity {}
+impl City for SwedenCity {}
+impl City for DenmarkCity {}

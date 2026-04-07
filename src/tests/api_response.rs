@@ -1,11 +1,11 @@
-use crate::structs::EveryCity;
-use crate::lss_api::ApiResponse;
+use crate::{lss_api::ApiResponse};
+use crate::structs::SwedenCity;
 
 ///this passes if it runs without error.
 #[tokio::test]
 async fn test_get() {
     
-    let _ = ApiResponse::get_from_city(&EveryCity::Göteborg).await.expect("expected a well formed response");
+    let _ = ApiResponse::get_from_city(&SwedenCity::Göteborg).await.expect("expected a well formed response");
     
     assert!(true)
 }
