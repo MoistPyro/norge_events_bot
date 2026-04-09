@@ -15,7 +15,8 @@ use super::error_hander;
     required_permissions = "CREATE_EVENTS",
     guild_only,
     subcommands("nor_post", "swe_post", "den_post"),
-    on_error = "error_hander"
+    on_error = "error_hander",
+    subcommand_required,
 )]
 pub async fn post(_ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
